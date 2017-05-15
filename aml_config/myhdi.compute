@@ -1,0 +1,5 @@
+address: "sparkstudygroup.azurehdinsight.net"
+username: "ninghai"
+password: ""  
+cluster: True
+native: True
