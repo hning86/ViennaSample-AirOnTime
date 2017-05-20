@@ -1,4 +1,4 @@
-address: "sparkstudygroup.azurehdinsight.net"
+address: "sparkhai-ssh.azurehdinsight.net"
 username: "ninghai"
 password: ""  
 cluster: True
