@@ -1,5 +1,5 @@
-address: "IP_ADDRESS"
-username: "USER"
-password: "PASSWORD"
+address: "haidsvm4.southcentralus.cloudapp.azure.com"
+username: "ninghai"
+password: ""
 cluster: False
 native: False

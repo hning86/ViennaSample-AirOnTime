@@ -13,27 +13,37 @@ from azureml_sdk import data_collector
 
 # start Spark session
 spark = pyspark.sql.SparkSession.builder.appName('AirOnTime').getOrCreate()
-
 # instantiate a logger
 run_logger = data_collector.current_run() 
 
 # read csv folder from attached wasb
-air = spark.read.csv('wasb:///airontime/*.csv', header=True)
+#air = spark.read.csv('wasb:///airontime/*.csv', header=True)
 
-#data = air.sample(False, 0.00001, seed=123).where('ARR_DEL15 IS NOT NULL').select('MONTH', 'DAY_OF_WEEK', 'UNIQUE_CARRIER', 'ARR_DEL15')
-data = air.where('ARR_DEL15 IS NOT NULL').select('MONTH', 'DAY_OF_WEEK', 'UNIQUE_CARRIER', 'ARR_DEL15')
-data = data.withColumn('MONTH', data['MONTH'].cast(DoubleType()))
-data = data.withColumn('DAY_OF_WEEK', data['DAY_OF_WEEK'].cast(DoubleType()))
-# rename "ARR_DEL15" column to "label"
+# take a very small sample
+#data = air.sample(False, 0.00001, seed=123).where('ARR_DEL15 IS NOT NULL').select('MONTH', 'DAY_OF_WEEK', 'UNIQUE_CARRIER', 'CRS_ELAPSED_TIME', 'ARR_DEL15')
+
+# load data from a local parquet file
+air = spark.read.parquet('AirOnTime_sample_15k.parquet')
+
+# select a list of relevant columns
+data = air.where('ARR_DEL15 IS NOT NULL').select('MONTH', 'DAY_OF_WEEK', 'UNIQUE_CARRIER', 'CRS_ELAPSED_TIME', 'ARR_DEL15')
+
+# convert CRS_ELAPSED_TIME to double.
+data = data.withColumn('CRS_ELAPSED_TIME', data['CRS_ELAPSED_TIME'].cast(DoubleType()))
+
+# rename "ARR_DEL15" column to "label", and cast it to double.
 data = data.withColumn('label', data['ARR_DEL15'].cast(DoubleType()))
 
 # cache the raw dataset
 numOfRows = data.cache().count()
 print('Total number of rows: {}'.format(numOfRows))
 
-train, test = data.select('DAY_OF_WEEK', 'MONTH', 'UNIQUE_CARRIER', 'label').randomSplit([0.8, 0.2])
+# split training and test datasets
+train, test = data.select('DAY_OF_WEEK', 'MONTH', 'UNIQUE_CARRIER', 'CRS_ELAPSED_TIME', 'label').randomSplit([0.75, 0.25])
+
 # cache the training set
 print('train data size: {}'.format(train.cache().count()))
+
 # cache the test set
 print('test data size: {}'.format(test.cache().count()))
 
@@ -49,11 +59,11 @@ ecM = OneHotEncoder(inputCol=siM.getOutputCol(), outputCol="e2")
 siCarrier = StringIndexer(inputCol='UNIQUE_CARRIER', outputCol='carrierIndex')
 ecC = OneHotEncoder(inputCol=siCarrier.getOutputCol(), outputCol='ca')
 
-# assemble vectors
-assembler = VectorAssembler(inputCols=[ecDow.getOutputCol(), ecM.getOutputCol(), ecC.getOutputCol()], outputCol="features")
+# assemble numeric features into a single vector column named 'features'
+assembler = VectorAssembler(inputCols=['e1', 'e2', 'ca', 'CRS_ELAPSED_TIME'], outputCol="features")
 
 # Logistic Regression algorithm with default parameter settings
-lr = LogisticRegression()
+lr = LogisticRegression(maxIter=50, regParam=0.01, elasticNetParam=0.8)
 
 # create the pipeline
 pipe = Pipeline(stages=[siDoW, siM, ecDow, ecM, siCarrier, ecC, assembler, lr])
@@ -73,4 +83,5 @@ print('######################################')
 print('AUC: {}'.format(auc))
 print('######################################')
 
+# log AUC
 run_logger.log("AUC", auc)
