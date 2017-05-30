@@ -26,7 +26,7 @@ run_logger = data_collector.current_run()
 air = spark.read.parquet('AirOnTime_sample_15k.parquet')
 
 # select a list of relevant columns
-data = air.where('ARR_DEL15 IS NOT NULL').select('MONTH', 'DAY_OF_WEEK', 'UNIQUE_CARRIER', 'CRS_ELAPSED_TIME', 'ARR_DEL15')
+data = air.where('ARR_DEL15 IS NOT NULL AND CRS_ELAPSED_TIME IS NOT NULL').select('MONTH', 'DAY_OF_WEEK', 'UNIQUE_CARRIER', 'CRS_ELAPSED_TIME', 'ARR_DEL15')
 
 # convert CRS_ELAPSED_TIME to double.
 data = data.withColumn('CRS_ELAPSED_TIME', data['CRS_ELAPSED_TIME'].cast(DoubleType()))
