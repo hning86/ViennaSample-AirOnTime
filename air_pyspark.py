@@ -91,3 +91,6 @@ print('######################################')
 
 # log AUC
 run_logger.log("AUC", auc)
+
+# save the model
+model.write().overwrite().save("wasb:///models/AirOnTimeModel.mml")
