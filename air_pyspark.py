@@ -1,3 +1,9 @@
+# This code only works against HDI:
+# 1. Download the AirOnTimeCSV.zip file from http://packages.revolutionanalytics.com/datasets/AirOnTime87to12/
+# 2. Expand the zip file into 303 csv files, then upload them to a container named "airontime" in the storage account where the HDI has a default container mapped to it.
+# 3. Configure a compute context against the HDI cluster.
+# 4. Run the code against that HDI cluster.
+
 import pyspark
 import pyspark.ml
 
@@ -17,16 +23,16 @@ spark = pyspark.sql.SparkSession.builder.appName('AirOnTime').getOrCreate()
 run_logger = data_collector.current_run() 
 
 # read csv folder from attached wasb
-#air = spark.read.csv('wasb:///airontime/*.csv', header=True)
+air = spark.read.csv('wasb:///airontime/*.csv', header=True)
 
 # take a very small sample
 #data = air.sample(False, 0.00001, seed=123).where('ARR_DEL15 IS NOT NULL').select('MONTH', 'DAY_OF_WEEK', 'UNIQUE_CARRIER', 'CRS_ELAPSED_TIME', 'ARR_DEL15')
 
 # load data from a local parquet file
-air = spark.read.parquet('AirOnTime_sample_15k.parquet')
+#air = spark.read.parquet('AirOnTime_sample_15k.parquet')
 
 # select a list of relevant columns
-data = air.where('ARR_DEL15 IS NOT NULL').select('MONTH', 'DAY_OF_WEEK', 'UNIQUE_CARRIER', 'CRS_ELAPSED_TIME', 'ARR_DEL15')
+data = air.where('ARR_DEL15 IS NOT NULL AND CRS_ELAPSED_TIME IS NOT NULL').select('MONTH', 'DAY_OF_WEEK', 'UNIQUE_CARRIER', 'CRS_ELAPSED_TIME', 'ARR_DEL15')
 
 # convert CRS_ELAPSED_TIME to double.
 data = data.withColumn('CRS_ELAPSED_TIME', data['CRS_ELAPSED_TIME'].cast(DoubleType()))
