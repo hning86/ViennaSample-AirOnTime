@@ -17,13 +17,13 @@ spark = pyspark.sql.SparkSession.builder.appName('AirOnTime').getOrCreate()
 run_logger = data_collector.current_run() 
 
 # read csv folder from attached wasb
-#air = spark.read.csv('wasb:///airontime/*.csv', header=True)
+air = spark.read.csv('wasb:///airontime/*.csv', header=True)
 
 # take a very small sample
 #data = air.sample(False, 0.00001, seed=123).where('ARR_DEL15 IS NOT NULL').select('MONTH', 'DAY_OF_WEEK', 'UNIQUE_CARRIER', 'CRS_ELAPSED_TIME', 'ARR_DEL15')
 
 # load data from a local parquet file
-air = spark.read.parquet('AirOnTime_sample_15k.parquet')
+#air = spark.read.parquet('AirOnTime_sample_15k.parquet')
 
 # select a list of relevant columns
 data = air.where('ARR_DEL15 IS NOT NULL AND CRS_ELAPSED_TIME IS NOT NULL').select('MONTH', 'DAY_OF_WEEK', 'UNIQUE_CARRIER', 'CRS_ELAPSED_TIME', 'ARR_DEL15')
