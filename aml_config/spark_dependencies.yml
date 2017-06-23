@@ -2,12 +2,11 @@
 # this file will be automatically provisioned for each run that uses Spark.
 
 # For third-party python libraries, see conda_dependencies.yml.
-# For frameworks that can't be installed by Conda, see base_dependencies.yml.
 
 configuration: {}
 repositories:
-  - "https://azuremlbuild.blob.core.windows.net/maven"
+  - "https://mmlspark.azureedge.net/maven"
 packages:
-  - group: "com.microsoft.azureml"
-    artifact: "azureml-sdk_2.11"
-    version: "1.0.0421"
+  - group: "com.microsoft.ml.spark"
+    artifact: "mmlspark_2.11"
+    version: "0.5"
