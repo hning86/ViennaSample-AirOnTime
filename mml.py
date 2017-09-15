@@ -1,9 +1,3 @@
-# This code only works against HDI:
-# 1. Download the AirOnTimeCSV.zip file from http://packages.revolutionanalytics.com/datasets/AirOnTime87to12/
-# 2. Expand the zip file into 303 csv files, then upload them to a container named "airontime" in the storage account where the HDI has a default container mapped to it.
-# 3. Configure a compute context against the HDI cluster.
-# 4. Run the code against that HDI cluster.
-
 import numpy as np
 import pandas as pd
 import mmlspark
@@ -11,9 +5,11 @@ import mmlspark
 import pyspark
 import pyspark.ml
 
+from pyspark.sql.types import DoubleType
+from pyspark.sql.functions import col
+
 from mmlspark.TrainClassifier import TrainClassifier
 from pyspark.ml.classification import LogisticRegression
-
 
 class timeit():
     from datetime import datetime
@@ -27,7 +23,7 @@ with timeit():
     spark = pyspark.sql.SparkSession.builder.appName("Air On Time from Hai").getOrCreate()
 
     # Load all .csv files in airontime folder
-    air = spark.read.csv('wasb:///airontime/*.csv', header=True).sample(True, 0.0001, seed=42)    
+    air = spark.read.csv('wasb:///airontime/*.csv', header=True).sample(True, 0.001, seed=42)    
 
     # cache and count
     print("Total number of rows: {}".format(air.cache().count()))
@@ -50,7 +46,7 @@ with timeit():
     print('Number of rows in test data size: {}'.format(test.cache().count()))
         
     # train
-    model = TrainClassifier(model=LogisticRegression(), labelCol="ARR_DEL15", numFeatures=256).fit(train)
+    model = TrainClassifier(model=LogisticRegression(), labelCol="label", numFeatures=256).fit(train)
 
     # score
     from mmlspark.ComputeModelStatistics import ComputeModelStatistics
